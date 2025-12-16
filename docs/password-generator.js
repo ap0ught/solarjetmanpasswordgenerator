@@ -37,12 +37,12 @@ class PasswordGenerator {
     }
 
     /**
-     * Check if a string represents a whole number
+     * Check if a string represents a non-negative whole number
      * @param {string} str - The string to check
-     * @returns {boolean} true if string represents a whole number
+     * @returns {boolean} true if string represents a non-negative whole number
      */
     isWholeNumber(str) {
-        const pattern = /^-?\d+$/;
+        const pattern = /^\d+$/;
         return pattern.test(str);
     }
 

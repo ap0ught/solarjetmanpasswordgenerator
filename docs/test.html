@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Generator Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .test-results {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-case {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-case.pass {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .test-case.fail {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        .test-name {
+            font-weight: 600;
+        }
+        .test-result {
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .summary.all-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Solar Jetman Password Generator Tests</h1>
+    <div class="test-results" id="testResults"></div>
+    <button onclick="runTests()">Run Tests</button>
+
+    <script src="password-generator.js"></script>
+    <script>
+        function runTests() {
+            const testCases = [
+                {
+                    name: 'Default values (all zeros)',
+                    input: {
+                        lives: 0,
+                        score: '0',
+                        level: 0,
+                        map: 0,
+                        pod: 0,
+                        shields: false,
+                        thrusters: false
+                    },
+                    expected: 'BBBBBBBBBBBB'
+                },
+                {
+                    name: 'Level 1, 5 lives, score 12345',
+                    input: {
+                        lives: 5,
+                        score: '12345',
+                        level: 0,
+                        map: 0,
+                        pod: 0,
+                        shields: false,
+                        thrusters: false
+                    },
+                    expected: 'LLBNHKGDBHBB'
+                },
+                {
+                    name: 'Score validation: Maximum valid score',
+                    input: {
+                        lives: 0,
+                        score: '999999',
+                        level: 0,
+                        map: 0,
+                        pod: 0,
+                        shields: false,
+                        thrusters: false
+                    },
+                    expected: null, // Just check it generates something
+                    validate: (result) => result.length === 12 && /^[BDGHKLMNPQRTVWXZ]+$/.test(result)
+                },
+                {
+                    name: 'All equipment enabled',
+                    input: {
+                        lives: 15,
+                        score: '0',
+                        level: 0,
+                        map: 0,
+                        pod: 0,
+                        shields: true,
+                        thrusters: true
+                    },
+                    expected: null,
+                    validate: (result) => result.length === 12 && /^[BDGHKLMNPQRTVWXZ]+$/.test(result)
+                },
+                {
+                    name: 'Different pod types',
+                    input: {
+                        lives: 0,
+                        score: '0',
+                        level: 0,
+                        map: 0,
+                        pod: 1, // Nippon Sports Jetpod
+                        shields: false,
+                        thrusters: false
+                    },
+                    expected: 'BBBBBBBBBKKB'
+                },
+                {
+                    name: 'Level 2 selection',
+                    input: {
+                        lives: 0,
+                        score: '0',
+                        level: 1,
+                        map: 0,
+                        pod: 0,
+                        shields: false,
+                        thrusters: false
+                    },
+                    expected: 'BBBBBBBBKKBB'
+                },
+                {
+                    name: 'Map device enabled',
+                    input: {
+                        lives: 0,
+                        score: '0',
+                        level: 0,
+                        map: 1, // Mapping Device
+                        pod: 0,
+                        shields: false,
+                        thrusters: false
+                    },
+                    expected: 'BBBBBBBBDDBB'
+                }
+            ];
+
+            let passed = 0;
+            let failed = 0;
+            const results = [];
+
+            testCases.forEach(test => {
+                const generator = new PasswordGenerator();
+                generator.reset();
+                generator.handleLives(test.input.lives);
+                generator.handleScore(test.input.score);
+                generator.handleLevel(test.input.level);
+                generator.handleMap(test.input.map);
+                generator.handlePod(test.input.pod);
+                generator.handleShields(test.input.shields);
+                generator.handleThrusters(test.input.thrusters);
+                
+                const result = generator.generateCode();
+                let success;
+                
+                if (test.validate) {
+                    success = test.validate(result);
+                } else {
+                    success = result === test.expected;
+                }
+                
+                if (success) {
+                    passed++;
+                } else {
+                    failed++;
+                }
+                
+                results.push({
+                    name: test.name,
+                    result: result,
+                    expected: test.expected || 'Valid format',
+                    success: success
+                });
+            });
+
+            displayResults(results, passed, failed);
+        }
+
+        function displayResults(results, passed, failed) {
+            const container = document.getElementById('testResults');
+            let html = '';
+
+            results.forEach(test => {
+                const className = test.success ? 'pass' : 'fail';
+                const icon = test.success ? '✓' : '✗';
+                html += `
+                    <div class="test-case ${className}">
+                        <div class="test-name">${icon} ${test.name}</div>
+                        <div class="test-result">${test.result} ${test.success ? '==' : '!='} ${test.expected}</div>
+                    </div>
+                `;
+            });
+
+            const total = passed + failed;
+            const summaryClass = failed === 0 ? 'all-pass' : '';
+            html += `
+                <div class="summary ${summaryClass}">
+                    ${passed} / ${total} tests passed
+                    ${failed > 0 ? `(${failed} failed)` : '- All tests passed! ✓'}
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Run tests on page load
+        window.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>

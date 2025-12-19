@@ -25,7 +25,7 @@ The site will be available at: `https://ap0ught.github.io/solarjetmanpasswordgen
 
 - ✅ Automatic deployment on push to `main`
 - ✅ Manual deployment option via Actions tab
-- ✅ Uses official GitHub Actions (v4)
+- ✅ Uses official GitHub Actions
 - ✅ Proper permissions for secure deployment
 - ✅ Concurrency control to prevent deployment conflicts
 
